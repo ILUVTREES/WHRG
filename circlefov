@@ -1,0 +1,96 @@
+local circle = Drawing.new("Circle")
+circle.Radius = 50 
+circle.Color = Color3.fromRGB(255, 255, 255)
+circle.Filled = false
+circle.Position = Vector2.new(100, 100)
+circle.NumSides = 16
+circle.Thickness = 2
+circle.Transparency = .9
+circle.Visible = false
+
+local dot = Drawing.new("Circle")
+dot.Radius = 3.5
+dot.Color = Color3.fromRGB(255, 255, 255)
+dot.Filled = true
+dot.Position = Vector2.new(200, 300)
+dot.NumSides = 16
+dot.Thickness = 2
+dot.Transparency = .9
+dot.Visible = false
+
+local line = Drawing.new("Line")
+line.From = Vector2.new(0, 0)
+line.To = Vector2.new(0, 0)
+line.Color = Color3.new(255, 255, 255)
+line.Thickness = 2
+line.Transparency = .9
+line.Visible = false
+
+game:GetService("UserInputService").InputBegan:Connect(function(Key, is)
+	if is then return end
+	if Key.UserInputType == Enum.UserInputType.Keyboard then
+		if Key.KeyCode == Enum.KeyCode.C then
+			local LPlayer = game:GetService("Players").LocalPlayer
+			local LMouse = LPlayer:GetMouse()
+
+			local Camera = game:GetService("Workspace").CurrentCamera
+
+			local function GetClosestPlayer()
+				local ClosestDistance, ClosestPlayer = circle.Radius, nil;
+				getgenv().Distance = 0
+				for _,Player in next, game:GetService("Players"):GetPlayers() do
+					if Player ~= LPlayer then
+						local Character = Player.Character
+						if Character and Character.Humanoid.Health > 1 then
+							local ScreenPosition, IsVisibleOnViewPort = Camera:WorldToViewportPoint(Character.HumanoidRootPart.Position)
+							if IsVisibleOnViewPort then
+								local MDistance = (Vector2.new(LMouse.X, LMouse.Y) - Vector2.new(ScreenPosition.X, ScreenPosition.Y)).Magnitude
+								if MDistance < ClosestDistance then
+									ClosestPlayer = Player
+									ClosestDistance = MDistance
+									getgenv().Distance = MDistance
+								end
+							end
+						end
+					end
+				end
+				return ClosestPlayer, ClosestDistance
+			end
+
+			local Caught = GetClosestPlayer()
+			print(getgenv().Distance)
+
+			if Caught ~= nil then
+				line.Visible = true
+				circle.Visible = true
+				dot.Visible = true
+				Thing =
+					game:GetService("RunService").RenderStepped:Connect(function()
+						if getgenv().Distance > circle.Radius then
+						line.Visible = false
+						circle.Visible = false
+						dot.Visible = false
+					else
+						line.Visible = true
+						circle.Visible = true
+						dot.Visible = true
+						end
+						local Line2D = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(game:GetService("Players").LocalPlayer:GetMouse().Hit.Position)
+						local Part2D = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(Caught.Character.HumanoidRootPart.Position)
+						line.From = Vector2.new(Line2D.X, Line2D.Y)
+						line.To = Vector2.new(Part2D.X, Part2D.Y)
+						dot.Position = Vector2.new(Part2D.X, Part2D.Y)
+						local Position2D = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(game:GetService("Players").LocalPlayer:GetMouse().Hit.Position)
+						circle.Position = Vector2.new(Position2D.X, Position2D.Y)
+					end)
+			else
+				line.Visible = false
+				circle.Visible = false
+				dot.Visible = false
+				if (Thing) and Thing.Connected then
+					Thing:Disconnect()
+				end
+			end
+		end
+	end
+end)
