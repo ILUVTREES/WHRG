@@ -1,0 +1,31 @@
+local line = Drawing.new("Line")
+line.From = Vector2.new(0, 0)
+line.To = Vector2.new(0, 0)
+line.Color = Color3.new(.33, .66, .99)
+line.Thickness = 2
+line.Transparency = 0.9
+line.Visible = false
+
+local Player = game:GetService("Players")["ilivz2"].Character
+local MousePos
+for i, v in next, Player:GetDescendants() do
+	if (v.Name:find("MousePos")) and v:IsA("Vector3Value") then
+		MousePos = v
+	end
+end
+
+game:GetService("RunService").Heartbeat:Connect(function()
+	if MousePos.Value ~= Vector3.new(0, 0, 0) and Player:findFirstChildWhichIsA("Tool") then
+		line.Visible = true
+		local Tool = Player:findFirstChildWhichIsA("Tool")
+		local d = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(Tool.Handle.Position)
+		print("Tool Vector2 = "..d.X, d.Y)
+		local f = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(MousePos.Value)
+		warn("Mouse Vector2 = "..f.X, f.Y)
+		line.From = Vector2.new(d.X, d.Y) -- origin
+		line.To = Vector2.new(f.X, f.Y) -- destination
+	else
+		line.Visible = false
+		print("Line visible to false")
+	end
+end)
