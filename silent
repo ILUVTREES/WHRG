@@ -1,0 +1,170 @@
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Prediction = 0.391
+
+local UIS = game:GetService("UserInputService")
+getgenv().EnabledLock = false
+getgenv().Final = nil
+getgenv().Resolver = false
+--[[
+getsenv(game:GetService("Players").LocalPlayer.Character.Animate).checkingSPEED = function()
+		return
+	end
+	for i, v in pairs(getconnections(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:GetPropertyChangedSignal("CFrame"))) do
+		v:Disable()
+	end
+	game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function()
+		repeat wait() until game:GetService("Players").LocalPlayer.Character:findFirstChild("Animate")
+		getsenv(game:GetService("Players").LocalPlayer.Character.Animate).checkingSPEED = function()
+			return
+		end
+		for i, v in pairs(getconnections(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:GetPropertyChangedSignal("CFrame"))) do
+			v:Disable()
+		end
+	end)
+	local Methods = {
+		"BANREMOTE",
+		"PERMAIDBAN",
+		"KICKREMOTE",
+		"BR_KICKPC",
+		"BR_KICKMOBILE",
+		"OneMoreTime",
+		"TeleportDetect",
+		"CHECKER_1",
+		"CHECKER",
+		"GUI_CHECK",
+		"MutePlayerRequest",
+		"SetBlockedUserIdsRequest"
+	}
+	local grm = getrawmetatable(game)
+	local nc = grm.__namecall
+	setreadonly(grm, false)
+	grm.__namecall = newcclosure(function(d, ...)
+		local Args = {...}
+		if getnamecallmethod() == "FireServer" then
+			if table.find(Methods,Args[1]) then return end
+		end
+		return nc(d, unpack(Args))
+	end)
+	setreadonly(grm, true)
+]]
+getgenv().CMMain =
+	UIS.InputBegan:Connect(function(input, chatting)
+		if chatting then return end
+		getgenv().CMActi = "Q"
+		if input.UserInputType == Enum.UserInputType.Keyboard then
+		if input.KeyCode == Enum.KeyCode[string.upper(getgenv().CMActi)] then
+			if not Lock then
+				Lock = true
+				GetNearestTarget = function()
+					-- Credits to whoever made this script. My own function works, but is not accurate
+					local players = {}
+					local PLAYER_HOLD  = {}
+					local DISTANCES = {}
+					for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+						if v ~= game:GetService("Players").LocalPlayer then
+							table.insert(players, v)
+						end
+					end
+					for i, v in pairs(players) do
+						if v.Character ~= nil then
+							local AIM = v.Character:FindFirstChild("Head")
+							if v.Character:findFirstChildOfClass("Humanoid").Health <= 0 then
+								return nil
+							end
+							local DISTANCE = (v.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
+							local RAY = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (game:GetService("Players").LocalPlayer:GetMouse().Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * DISTANCE)
+							local HIT,POS = game.Workspace:FindPartOnRay(RAY, game.Workspace)
+							local DIFF = math.floor((POS - AIM.Position).magnitude)
+							PLAYER_HOLD[v.Name .. i] = {}
+							PLAYER_HOLD[v.Name .. i].dist= DISTANCE
+							PLAYER_HOLD[v.Name .. i].plr = v
+							PLAYER_HOLD[v.Name .. i].diff = DIFF
+							table.insert(DISTANCES, DIFF)
+						end
+					end
+
+					if unpack(DISTANCES) == nil then
+						return nil
+					end
+
+					local L_DISTANCE = math.floor(math.min(unpack(DISTANCES)))
+					if L_DISTANCE > 30 then
+						return nil
+					end
+
+
+					for i, v in pairs(PLAYER_HOLD) do
+						if v.diff == L_DISTANCE then
+							return v.plr
+						end
+					end
+					return nil
+				end
+
+				pcall(function()
+					CaughtPlayer = GetNearestTarget().Character or GetNearestTarget().CharacterAdded:Wait()
+				end)
+
+				DFGKODFG2 =
+					game:GetService("RunService").RenderStepped:Connect(function()
+						local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+						local Value = tostring(ping)
+						local pingValue = Value:split(" ")
+						local PingNumber = pingValue[1]
+						local PingPred = PingNumber / 1000
+						local Distance = game:GetService("Players").LocalPlayer:DistanceFromCharacter(CaughtPlayer.UpperTorso.Position) /  1000
+						local Size = CaughtPlayer.UpperTorso.Size.X + CaughtPlayer.UpperTorso.Size.Y + CaughtPlayer.UpperTorso.Size.Z / 10000000
+						local Health = CaughtPlayer.Humanoid.Health / 1000
+						MainPred = PingPred + Health + Distance + Size + Prediction
+						getgenv().Final = CaughtPlayer.UpperTorso.CFrame + CaughtPlayer.Humanoid.MoveDirection / tonumber(Prediction)
+					end)
+				getgenv().EnabledLockd = true
+			else
+				Lock = false
+				if DFGKODFG2 then DFGKODFG2:Disconnect() end
+				getgenv().EnabledLockd = false
+			end
+		end
+	end
+	end)
+
+Rage = 
+	UIS.InputBegan:Connect(function(input)
+		if (input.KeyCode == Enum.KeyCode.LeftAlt and UIS:IsKeyDown(Enum.KeyCode.Z)) or (input.KeyCode == Enum.KeyCode.Z and UIS:IsKeyDown(Enum.KeyCode.LeftAlt)) then
+		if not Rage then
+			Rage = true
+			game:GetService("Workspace").Camera.CameraSubject = CaughtPlayer.Humanoid
+			local Tool = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Tool").Name
+			game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Tool").GripPos = Vector3.new(0, -22, 0)
+			game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Tool").Parent = game:GetService("Players").LocalPlayer.Backpack
+			game:GetService("Players").LocalPlayer.Backpack[Tool].Parent = game:GetService("Players").LocalPlayer.Character
+			LastPosition = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position
+			thing =
+				game:GetService("RunService").Heartbeat:Connect(function()
+					game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame = CaughtPlayer.HumanoidRootPart.CFrame * CFrame.new(0, -7, 0)
+				end)
+		else
+			Rage = false
+			game:GetService("Workspace").Camera.CameraSubject = game:GetService("Players").LocalPlayer.Character.Humanoid
+			thing:Disconnect()
+			local Tool = game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Tool").Name
+			game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Tool").GripPos = Vector3.new(0, 0.03, 0)
+			game:GetService("Players").LocalPlayer.Character:FindFirstChildOfClass("Tool").Parent = game:GetService("Players").LocalPlayer.Backpack
+			game:GetService("Players").LocalPlayer.Backpack[Tool].Parent = game:GetService("Players").LocalPlayer.Character
+			game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(LastPosition)
+		end
+	end
+	end)
+
+__index = hookmetamethod(game, "__index", function(t, k)
+	if (t:IsA("Mouse") and (k == "Hit" or k == "Target") and (getgenv().EnabledLockd and getgenv().EnabledLockd == true)) then
+		if ((getgenv().EnabledLockd and getgenv().EnabledLockd == true) and (k == "Hit" or k == "Target")) then
+			local Hit = getgenv().Final
+			return (k == "Hit" and Hit or nil)
+		end
+	end
+	return __index(t, k)
+end)                           
+
+game:GetService("Players").LocalPlayer.Character.Humanoid:ChangeState("Jumping")                   
