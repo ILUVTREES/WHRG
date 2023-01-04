@@ -1,0 +1,262 @@
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+--[[
+vanis and jaseh owns every nigga
+]]
+
+if getgenv().Already_Loaded then
+	return
+end
+
+repeat task.wait() until game:GetService("Players").LocalPlayer.Character:FindFirstChild("ForceField") == nil
+
+getgenv().Prediction = 0.391
+
+
+-- // SETTINGS \\ --
+local Key = "Q"
+local MemorySpoofer = true
+local LegitPredBreaker = false -- Causes FPS drops if moving around a lot
+local IgnoreFriends = false
+
+
+
+
+local UIS = game:GetService("UserInputService")
+getgenv().EnabledLock = false
+getgenv().Final = nil
+
+spawn(function()
+	if LegitPredBreaker == true then
+		game:GetService("Players").LocalPlayer.Character.Humanoid:GetPropertyChangedSignal("MoveDirection"):Connect(function()
+			local old = game:GetService("Players").LocalPlayer.Character.Humanoid.MoveDirection
+			repeat
+				game:GetService("RunService").Heartbeat:Wait()
+				local OldHRPVelocity = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Velocity
+				game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(game:GetService("Players").LocalPlayer.Character.Humanoid.MoveDirection)
+				game:GetService("RunService").RenderStepped:Wait()
+				game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Velocity = OldHRPVelocity
+			until game:GetService("Players").LocalPlayer.Character.Humanoid.MoveDirection == Vector3.new(old)
+		end)
+		game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function(c)
+			repeat wait() until c:FindFirstChild("ForceField") == nil
+			game:GetService("Players").LocalPlayer.Character.Humanoid:GetPropertyChangedSignal("MoveDirection"):Connect(function()
+				local old = game:GetService("Players").LocalPlayer.Character.Humanoid.MoveDirection
+				repeat
+					game:GetService("RunService").Heartbeat:Wait()
+					local OldHRPVelocity = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Velocity
+					game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Velocity = Vector3.new(game:GetService("Players").LocalPlayer.Character.Humanoid.MoveDirection)
+					game:GetService("RunService").RenderStepped:Wait()
+					game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Velocity = OldHRPVelocity
+				until game:GetService("Players").LocalPlayer.Character.Humanoid.MoveDirection == Vector3.new(old)
+			end)
+		end)
+	end
+
+	if MemorySpoofer == true then
+		getgenv().Result = 0
+		local CoreGui = game:GetService("CoreGui")
+		local DevConsoleMaster = CoreGui:WaitForChild("DevConsoleMaster")
+		local DevConsoleWindow = DevConsoleMaster:WaitForChild("DevConsoleWindow")
+		local DevConsoleUI = DevConsoleWindow:WaitForChild("DevConsoleUI")
+		local TopBar = DevConsoleUI:WaitForChild("TopBar")
+		local LiveStatsModule = TopBar:WaitForChild("LiveStatsModule")
+		pcall(function()
+			MemoryUsage_MB = LiveStatsModule:WaitForChild("MemoryUsage_MB")
+		end)
+		local Signals = {
+			'DescendantAdded','descendantAdded',
+			'DescendantRemoving','descendantRemoving',
+			'ChildAdded','childAdded',
+			'ChildRemoved','childRemoved',
+			'FindFirstChild','findFirstChild',
+			'FindFirstChildOfClass','findFirstChildOfClass',
+			'FindFirstChildWhichIsA','findFirstChildWhichIsA',
+			'FindFirstAncestor','findFirstAncestor',
+			'FindFirstAncestorOfClass', 'findFirstAncestorOfClass',
+			'FindFirstAncestorWhichIsA', 'findFirstAncestorWhichIsA',
+			'FindFirstDescendant', 'findFirstDescendant',
+			'Destroying'
+		};
+		for i, v in next, getconnections(LiveStatsModule[unpack(Signals)]) do
+			v:Disable()
+		end
+		local Cloned = MemoryUsage_MB:Clone()
+		Cloned.Parent = LiveStatsModule
+		Cloned.Name = MemoryUsage_MB.Name.." "
+		MemoryUsage_MB:Remove()
+
+
+		for d, g in next, CoreGui:WaitForChild("RobloxGui"):WaitForChild("PerformanceStats"):GetDescendants() do
+			if (g:IsA("TextLabel")) and string.find(g.Text, "Mem") then
+				Cloned3 = g.Parent.ValueLabel:Clone()
+				Cloned3.Parent = g.Parent
+				Cloned3.Name = g.Parent.ValueLabel.Name.." "
+				g.Parent.ValueLabel:Remove()
+			end
+		end
+		function ran() return math.random(0,9) end
+		task.spawn(function()
+			while task.wait(4) do
+				getgenv().Result = math.random(700, 900)
+				Cloned.Text = getgenv().Result.." MB"
+			end
+		end)
+		repeat task.wait() until getgenv().Result > 0
+		task.spawn(function()
+			while wait(1) do
+				local final = getgenv().Result.."."..ran()..ran()
+				Cloned3.Text = final.." MB"
+			end
+		end)
+		local old
+		old = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+			if (getnamecallmethod() == "GetTotalMemoryUsageMb" or getnamecallmethod() == "getTotalMemoryUsageMb") then
+				return getgenv().Result.."."..ran()..ran()..ran()
+			end
+			return old(self, ...)
+		end))
+	end
+end)
+
+if game.PlaceId == 2788229376 then
+	getsenv(game:GetService("Players").LocalPlayer.Character.Animate).checkingSPEED = function()
+		return
+	end
+	for i, v in pairs(getconnections(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:GetPropertyChangedSignal("CFrame"))) do
+		v:Disable()
+	end
+	game:GetService("Players").LocalPlayer.CharacterAdded:Connect(function()
+		repeat wait() until game:GetService("Players").LocalPlayer.Character:findFirstChild("Animate")
+		getsenv(game:GetService("Players").LocalPlayer.Character.Animate).checkingSPEED = function()
+			return
+		end
+		for i, v in pairs(getconnections(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:GetPropertyChangedSignal("CFrame"))) do
+			v:Disable()
+		end
+	end)
+	local Methods = {
+		"BANREMOTE",
+		"PERMAIDBAN",
+		"KICKREMOTE",
+		"BR_KICKPC",
+		"BR_KICKMOBILE",
+		"OneMoreTime",
+		"TeleportDetect",
+		"CHECKER_1",
+		"CHECKER",
+		"GUI_CHECK",
+	}
+	local grm = getrawmetatable(game)
+	local nc = grm.__namecall
+	setreadonly(grm, false)
+	grm.__namecall = newcclosure(function(d, ...)
+		local Args = {...}
+		if getnamecallmethod() == "FireServer" then
+			if table.find(Methods,Args[1]) then return end
+		end
+		return nc(d, unpack(Args))
+	end)
+	setreadonly(grm, true)
+end
+getgenv().SHOOT = false
+getgenv().RIGHTNEOW = false
+getgenv().CMMain =
+	UIS.InputBegan:Connect(function(input, chatting)
+		if chatting then return end
+		if input.UserInputType == Enum.UserInputType.Keyboard then
+		if input.KeyCode == Enum.KeyCode[Key:upper()] then
+			GetNearestTarget = function()
+				-- Credits to whoever made this script. My own function works, but is not accurate
+				local players = {}
+				local PLAYER_HOLD  = {}
+				local DISTANCES = {}
+				for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+					if v ~= game:GetService("Players").LocalPlayer then
+						table.insert(players, v)
+					end
+				end
+				for i, v in pairs(players) do
+					if v.Character ~= nil then
+						local AIM = v.Character:FindFirstChild("Head")
+						if v.Character:findFirstChildOfClass("Humanoid").Health <= 0 then
+							return nil
+						end
+						
+						if IgnoreFriends == true then
+							if game:GetService("Players").LocalPlayer:IsFriendsWith(v.UserId) then
+							return nil
+						end
+						end
+						
+						local DISTANCE = (v.Character:FindFirstChild("Head").Position - game:GetService("Workspace").CurrentCamera.CFrame.p).magnitude
+						local RAY = Ray.new(game:GetService("Workspace").CurrentCamera.CFrame.p, (game:GetService("Players").LocalPlayer:GetMouse().Hit.p - game:GetService("Workspace").CurrentCamera.CFrame.p).unit * DISTANCE)
+						local HIT,POS = game:GetService("Workspace"):FindPartOnRay(RAY, game:GetService("Workspace"))
+						local DIFF = math.floor((POS - AIM.Position).magnitude)
+						PLAYER_HOLD[v.Name .. i] = {}
+						PLAYER_HOLD[v.Name .. i].dist= DISTANCE
+						PLAYER_HOLD[v.Name .. i].plr = v
+						PLAYER_HOLD[v.Name .. i].diff = DIFF
+						table.insert(DISTANCES, DIFF)
+					end
+				end
+
+				if unpack(DISTANCES) == nil then
+					return nil
+				end
+
+				local L_DISTANCE = math.floor(math.min(unpack(DISTANCES)))
+				if L_DISTANCE > 30 then
+					return nil
+				end
+
+
+				for i, v in pairs(PLAYER_HOLD) do
+					if v.diff == L_DISTANCE then
+						return v.plr
+					end
+				end
+				return nil
+			end
+
+			pcall(function()
+				CaughtPlayer = GetNearestTarget().Character or GetNearestTarget().CharacterAdded:Wait()
+			end)
+
+			local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+			local Value = tostring(ping)
+			local pingValue = Value:split(" ")
+			local PingNumber = pingValue[1]
+			local PingPred = PingNumber / 1000
+			pcall(function()
+				Distance = game:GetService("Players").LocalPlayer:DistanceFromCharacter(CaughtPlayer.UpperTorso.Position) /  1000
+			end)
+			local Size = CaughtPlayer.UpperTorso.Size.X + CaughtPlayer.UpperTorso.Size.Y + CaughtPlayer.UpperTorso.Size.Z / 10000000
+			local Health = CaughtPlayer.Humanoid.Health / 1000
+			MainPred = PingPred + Health + Distance + Size + getgenv().Prediction
+			getgenv().Final = CaughtPlayer.UpperTorso.CFrame + CaughtPlayer.Humanoid.MoveDirection / tonumber(getgenv().Prediction)
+			getgenv().SHOOT = true game:GetService("RunService").RenderStepped:Wait()
+			print("Shoot = true")
+			print("Attempting to shoot")
+			mouse1click() game:GetService("RunService").RenderStepped:Wait()
+			print("Shooted")
+			getgenv().SHOOT = false
+			print("SHOOT = false")
+		end
+	end
+	end)
+
+__index = hookmetamethod(game, "__index", function(t, k)
+	if (t:IsA("Mouse") and (k == "Hit" or k == "Target") and (getgenv().SHOOT and getgenv().SHOOT == true)) then
+		print("on 1")
+		if ((getgenv().SHOOT and getgenv().SHOOT == true) and (k == "Hit" or k == "Target")) then
+			print("on 2")
+			local Hit = getgenv().Final
+			return (k == "Hit" and Hit or nil)
+		end
+	end
+	return __index(t, k)
+end)                                              
+
+game:GetService("Players").LocalPlayer.Character.Humanoid:ChangeState("Jumping")
+getgenv().Already_Executed = true
