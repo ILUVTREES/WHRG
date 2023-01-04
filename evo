@@ -1,0 +1,1122 @@
+local function SecureServices(Service)
+	return cloneref(game:GetService(Service))
+end
+
+local Players = SecureServices("Players")
+local Workspace = SecureServices("Workspace")
+local UserInputService = SecureServices("UserInputService")
+local LocalPlayer = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+repeat
+	task.wait()
+until game:IsLoaded() and LocalPlayer and Character and Character:FindFirstChild("ForceField") == nil
+
+getgenv().Default = {
+	Keybinds = {
+		Panic = "Alt + Y";
+	};
+	FOV = {
+		Radius = 50;
+		Color = Color3.fromRGB(51, 156, 255);
+		Filled = false;
+		Transparency = 0.9;
+		Visible = true;
+	};
+
+	SilentAim = {
+		Enabled = true;
+		Keybind = Enum.KeyCode.C;
+		WallCheck = true;
+		KnockedCheck = true;
+		GrabbedCheck = true;
+		CrewCheck = false;
+		GroupCheck = false;
+		FriendsCheck = true;
+		Resolver = true;
+		AutoPrediction = true;
+		Prediction = 0.0461;
+		PredictionVector = "Velocity";
+		MinHealth = 0;
+		HitBox = "UpperTorso";
+	};
+
+	CameraLock = {
+		Enabled = true;
+		Keybind = Enum.KeyCode.X;
+		WallCheck = true;
+		KnockedCheck = true;
+		GrabbedCheck = true;
+		CrewCheck = false;
+		GroupCheck = false;
+		FriendsCheck = true;
+		Resolver = true;
+		AutoPrediction = true;
+		Prediction = 0.0461;
+		PredictionVector = "Velocity";
+		MinHealth = 0;
+		HitBox = "UpperTorso";
+	};
+	Smoothness = {
+		Enabled = true;
+		Amount = 0.49;
+		EasingStyle = "Circular";
+		EasingDirection = "InOut";
+	};
+	Configs = {
+		SilentAim = true;
+		CameraLock = true;
+		AntiLock = true;
+		Panic = true;
+		AntiLockDetector = true;
+	};
+	Memory = {
+		MemorySpoofer = true;
+		MinimumMemory = 700;
+		MaxMemory = 900;
+	};
+};
+
+local library = loadstring(game:HttpGet("https://gist.githubusercontent.com/cypherdh/706f5726af3f01e83263f1e85b8319e2/raw/19e1bfff1ed4486a649fab0fcfd1a5e17dd5374d/gistfile1.txt"))()
+
+local watermark = library:Watermark("")
+watermark:Hide()
+
+local PredBasedSilent
+local PredBased
+local Default = getgenv().Default
+local SilentAim = Default.SilentAim
+local CameraLock = Default.CameraLock
+local Configs = Default.Configs
+local Smoothness = Default.Smoothness
+local WhitelistedPlayers = {}
+
+local Enabled = false
+
+local main = library:Load{
+	Name = "Evolution | Streamable (Beta)",
+	SizeX = 450,
+	SizeY = 590,
+	Theme = "Midnight",
+	Extension = "json", -- config file extension
+	Folder = "Evolution | Streamable" -- config folder name
+}
+
+local tab = main:Tab("Primary")
+local Misc = main:Tab("Miscellaneous")
+local RageTab = main:Tab("Rampage")
+local VisualTab = main:Tab("Visuals")
+local CreditsTab = main:Tab("Credits")
+
+section = tab:Section{
+	Name = "Camera Lock",
+	Side = "Left"
+}
+
+section:Toggle{
+	Name = "Enabled",
+	Flag = nil,
+	Default = CameraLock.Enabled,
+	Callback  = function(bool)
+		CameraLock.Enabled = bool
+	end
+}
+
+section:Keybind{
+	Name = "Activation Keybind",
+	Flag = nil,
+	Default = CameraLock.Keybind,
+	Blacklist = {Enum.UserInputType.MouseButton1},
+	Callback = function(key)
+		CameraLock.Keybind = key
+	end
+}
+
+section:Separator("Prediction")
+
+section:Toggle{
+	Name = "Automatic Prediction",
+	Flag = nil,
+	Default = CameraLock.AutoPrediction,
+	Callback  = function(bool)
+		CameraLock.AutoPrediction = bool
+	end
+}
+
+section:Box{
+	Name = "",
+	Default = "",
+	Placeholder = "Prediction Amount - "..tostring(CameraLock.Prediction),
+	Flag = nil,
+	Callback = function(text)
+		CameraLock.Prediction = tonumber(text)
+	end
+}
+
+local PredictionBased = section:Dropdown{
+	Name = "Prediction Based",
+	Default = {"Ping", "Distance", "Hit Part Size"},
+	Max = 3, -- makes it multi
+	Content = {
+		"Ping",
+		"Distance",
+		"Hit Part Size",
+	},
+	Flag = "Prediction Based",
+	Callback = function(option)
+		PredBased = table.concat(option, ", ")
+	end
+}
+
+section:Dropdown{
+	Name = "Prediction Vector",
+	Default = CameraLock.PredictionVector,
+	Content = {
+		"Velocity";
+		"WalkDirection"
+	},
+	Flag = nil,
+	Callback = function(option)
+		CameraLock.PredictionVector = option
+	end
+}
+
+
+section:Separator("Smoothness")
+
+section:Toggle{
+	Name = "Smoothness Enabled",
+	Flag = nil,
+	Default = Smoothness.Enabled,
+	Callback  = function(bool)
+		Smoothness.Enabled = bool
+	end
+}
+
+section:Box{
+	Name = "Smoothness Amount",
+	Default = "Smoothness Amount - "..tostring(Smoothness.Amount),
+	Placeholder = "Smoothness Amount",
+	Flag = nil,
+	Callback = function(text)
+		Smoothness.Amount = text
+	end
+}
+
+local EasingStyles = {}
+for i, v in next, Enum.EasingStyle:GetEnumItems() do
+	EasingStyles[i] = string.gsub(tostring(v), "Enum.EasingStyle.", "")
+end
+
+section:Dropdown{
+	Name = "Easing Style",
+	Default = Smoothness.EasingStyle,
+	Content = {
+		unpack(EasingStyles)
+	},
+	Flag = nil,
+	Callback = function(option)
+		Smoothness.EasingStyle = option
+	end
+}
+
+section:Dropdown{
+	Name = "Easing Direction",
+	Default = Smoothness.EasingDirection,
+	Content = {
+		"In",
+		"Out",
+		"InOut"
+	},
+	Flag = nil,
+	Callback = function(option)
+		Smoothness.EasingDirection = option
+	end
+}
+
+section:Separator("Configurations")
+
+local Hitbox = {}
+for i, v in next, SecureServices("Players").LocalPlayer.Character:GetChildren() do
+	if v:IsA("MeshPart") or (v.Name:find("HumanoidRootPart") and v:IsA("BasePart")) then
+		Hitbox[i] = v.Name
+	end
+end
+
+section:Dropdown{
+	Name = "Hit Part",
+	Default = CameraLock.HitBox,
+	Content = {
+		unpack(Hitbox)
+	},
+	Flag = nil,
+	Callback = function(option)
+		CameraLock.HitBox = option
+	end
+}
+
+section:Toggle{
+	Name = "Wall Check",
+	Flag = nil,
+	Default = CameraLock.WallCheck,
+	Callback  = function(bool)
+		CameraLock.WallCheck = bool
+	end
+}
+
+section:Toggle{
+	Name = "Knocked Check",
+	Flag = nil,
+	Default = CameraLock.KnockedCheck,
+	Callback  = function(bool)
+		CameraLock.KnockedCheck = bool
+	end
+}
+
+section:Toggle{
+	Name = "Grabbed Check",
+	Flag = nil,
+	Default = CameraLock.GrabbedCheck,
+	Callback  = function(bool)
+		CameraLock.GrabbedCheck = bool
+	end
+}
+
+section:Toggle{
+	Name = "Friends Check",
+	Flag = nil,
+	Default = CameraLock.FriendsCheck,
+	Callback  = function(bool)
+		CameraLock.FriendsCheck = bool
+	end
+}
+
+section:Toggle{
+	Name = "Crew Check",
+	Flag = nil,
+	Default = CameraLock.CrewCheck,
+	Callback  = function(bool)
+		CameraLock.CrewCheck = bool
+	end
+}
+
+section:Toggle{
+	Name = "Group Check",
+	Flag = nil,
+	Default = CameraLock.GroupCheck,
+	Callback  = function(bool)
+		CameraLock.GroupCheck = bool
+	end
+}
+
+section:Box{
+	Name = "",
+	Default = "",
+	Placeholder = "Minimum Health - "..tostring(CameraLock.MinHealth),
+	Flag = nil,
+	Callback = function(text)
+		CameraLock.MinHealth = text
+	end
+}
+
+local Silent_Aim_Section = tab:section{
+	Name = "Silent Aim",
+	Side = "Right"
+}
+
+Silent_Aim_Section:Toggle{
+	Name = "Enabled",
+	Flag = nil,
+	Default = SilentAim.Enabled,
+	Callback  = function(bool)
+		Enabled = bool
+	end
+}
+
+Silent_Aim_Section:Keybind{
+	Name = "Activation Keybind",
+	Flag = nil,
+	Default = Enum.KeyCode.W,
+	Blacklist = {Enum.UserInputType.MouseButton1},
+	Callback = function(key)
+		return
+	end
+}
+
+Silent_Aim_Section:Separator("Prediction")
+
+Silent_Aim_Section:Toggle{
+	Name = "Automatic Prediction",
+	Flag = nil,
+	Default = SilentAim.AutoPrediction,
+	Callback  = function(bool)
+		SilentAim.AutoPrediction = bool
+	end
+}
+
+Silent_Aim_Section:Box{
+	Name = "",
+	Default = "",
+	Placeholder = "Prediction Amount - "..tostring(SilentAim.Prediction),
+	Flag = nil,
+	Callback = function(text)
+		SilentAim.Prediction = tonumber(text)
+	end
+}
+
+local PredictionBasedSilent = Silent_Aim_Section:Dropdown{
+	Name = "Prediction Based",
+	Default = {"Ping", "Distance", "Hit Part Size"},
+	Max = 3, -- makes it multi
+	Content = {
+		"Ping",
+		"Distance",
+		"Hit Part Size",
+	},
+	Flag = "Prediction Based",
+	Callback = function(option)
+		PredBasedSilent = table.concat(option, ", ")
+	end
+}
+
+Silent_Aim_Section:Dropdown{
+	Name = "Prediction Vector",
+	Default = SilentAim.PredictionVector,
+	Content = {
+		"Velocity";
+		"WalkDirection"
+	},
+	Flag = nil,
+	Callback = function(option)
+		SilentAim.PredictionVector = option
+	end
+}
+
+Silent_Aim_Section:Separator("Configurations")
+
+Silent_Aim_Section:Dropdown{
+	Name = "Hit Part",
+	Default = SilentAim.HitBox,
+	Content = {
+		unpack(Hitbox)
+	},
+	Flag = nil,
+	Callback = function(option)
+		SilentAim.HitBox = option
+	end
+}
+
+Silent_Aim_Section:Toggle{
+	Name = "Wall Check",
+	Flag = nil,
+	Default = SilentAim.WallCheck,
+	Callback  = function(bool)
+		SilentAim.WallCheck = bool
+	end
+}
+
+Silent_Aim_Section:Toggle{
+	Name = "Knocked Check",
+	Flag = nil,
+	Default = SilentAim.KnockedCheck,
+	Callback  = function(bool)
+		SilentAim.KnockedCheck = bool
+	end
+}
+
+Silent_Aim_Section:Toggle{
+	Name = "Grabbed Check",
+	Flag = nil,
+	Default = SilentAim.GrabbedCheck,
+	Callback  = function(bool)
+		SilentAim.GrabbedCheck = bool
+	end
+}
+
+Silent_Aim_Section:Toggle{
+	Name = "Friends Check",
+	Flag = nil,
+	Default = SilentAim.FriendsCheck,
+	Callback  = function(bool)
+		SilentAim.FriendsCheck = bool
+	end
+}
+
+Silent_Aim_Section:Toggle{
+	Name = "Crew Check",
+	Flag = nil,
+	Default = SilentAim.CrewCheck,
+	Callback  = function(bool)
+		SilentAim.CrewCheck = bool
+	end
+}
+
+Silent_Aim_Section:Toggle{
+	Name = "Group Check",
+	Flag = nil,
+	Default = SilentAim.GroupCheck,
+	Callback  = function(bool)
+		SilentAim.GroupCheck = bool
+	end
+}
+
+	WhitelistSection = tab:Section{
+		Name = "Whitelists",
+		Side = "Right"
+	}
+
+	local function GetPlayer(String)
+		local plr
+		local strl = String:lower()
+		for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+			if v.Name:lower():sub(1, #String) == String:lower() then
+				plr = v
+			end
+		end
+		if String == "" or String == " " then
+			plr = nil
+		end
+		return plr
+	end
+	WhitelistSection:Box{
+		Name = "",
+		Default = "",
+		Placeholder = "Whitelist Username",
+		Flag = nil,
+	Callback = function(text)
+		pcall(function()
+			CaughtPlayer = GetPlayer(text).Name
+		end)
+		end
+	}
+
+	WhitelistSection:Button{
+		Name = "Insert Player",
+	Callback = function()
+		pcall(function()
+			table.insert(WhitelistedPlayers, CaughtPlayer)
+		end)
+		end
+	}
+
+
+	WhitelistSection:Button{
+		Name = "Exclude Player",
+	Callback = function(d)
+		pcall(function()
+			table.remove(WhitelistedPlayers, CaughtPlayer)
+		end)
+		end
+	}
+
+WhitelistSection:Label("Username doesn't have to be full")
+
+Misclel = Misc:Section{
+	Name = "Desync",
+	Side = "Left"
+}
+
+
+Misclel:Toggle{
+	Name = "Enabled",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+Misclel:Toggle{
+	Name = "Visualize",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+Misclel:Separator("Modes")
+
+Misclel:Dropdown{
+	Name = "Desync Mode",
+	Default = CameraLock.PredictionVector,
+	Content = {
+		"Sky";
+		"Underground";
+		"Behind";
+		"Left";
+		"Right";
+	},
+	Flag = nil,
+	Callback = function(option)
+	end
+}
+
+Misclel:Separator("Custom")
+
+Misclel:Slider{
+	Text = "Velocity X Value",
+	Default = 1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 300, -- Max (Max it can go)
+	Float = 1, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+Misclel:Slider{
+	Text = "Velocity Y Value",
+	Default = 1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 300, -- Max (Max it can go)
+	Float = 1, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+Misclel:Slider{
+	Text = "Velocity Z Value",
+	Default = 1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 300, -- Max (Max it can go)
+	Float = 1, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+MiscA = Misc:Section{
+	Name = "Aim viewer",
+	Side = "Right"
+}
+
+MiscA:Toggle{
+	Name = "Enabled",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+MiscA:Keybind{
+	Name = "Activation Keybind",
+	Flag = nil,
+	Default = Keybinds.CameraLock,
+	Blacklist = {Enum.UserInputType.MouseButton1},
+	Callback = function(key)
+		Keybinds.CameraLock = key
+	end
+}
+
+MiscA:Slider{
+	Name = "Transparency",
+	Text = "[value]",
+	Default = 0.1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 1, -- Max (Max it can go)
+	Float = 0.01, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+MiscA:Slider{
+	Name = "Thickness",
+	Text = "[value]",
+	Default = 0.1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 20, -- Max (Max it can go)
+	Float = 0.1, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+MiscA:ColorPicker{
+	Name = "Line Colour",
+	Default = Color3.fromRGB(236, 79, 0), 
+	Flag = nil, 
+	Callback = function(color)
+		print(color)
+	end
+}
+
+
+
+-- RAGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+RageTabLeft = RageTab:Section{
+	Name = "Misc",
+	Side = "Left"
+}
+
+
+RageTabLeft:Toggle{
+	Name = "Cframe",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Toggle{
+	Name = "Anti Stomp",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Toggle{
+	Name = "Auto Stomp",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Toggle{
+	Name = "No Recoil",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Toggle{
+	Name = "Auto clicker",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Toggle{
+	Name = "Headless",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Toggle{
+	Name = "Korblox",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Toggle{
+	Name = "Low Gfx",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Toggle{
+	Name = "Anti Fling",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Toggle{
+	Name = "Autoblock",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabLeft:Button{
+	Name = "Godmode",
+	Callback  = function()
+		print("Button clicked")
+	end
+}
+
+
+RageTabRight = RageTab:Section{
+	Name = "Misc Settings",
+	Side = "Right"
+}
+
+RageTabRight:Keybind{
+	Name = "Cframe Keybind",
+	Flag = nil, -- Leave this
+	Default = Keybinds.CameraLock, -- Defualt setting
+	Blacklist = {Enum.UserInputType.MouseButton1}, -- Keybinds to ignore
+	Callback = function(key)
+		Keybinds.CameraLock = key
+	end
+}
+
+RageTabRight:Slider{
+	Text = "Cframe Speed",
+	Default = 1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 10, -- Max (Max it can go)
+	Float = 1, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+
+RageTabRight:Keybind{
+	Name = "Auto Clicker Keybind",
+	Flag = nil, -- Leave this
+	Default = Keybinds.CameraLock, -- Defualt setting
+	Blacklist = {Enum.UserInputType.MouseButton1}, -- Keybinds to ignore
+	Callback = function(key)
+		Keybinds.CameraLock = key
+	end
+}
+
+
+RageTabRight:Slider{
+	Text = "Autoclicker CPS",
+	Default = 1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 250, -- Max (Max it can go)
+	Float = 1, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+RageTabDesync = RageTab:Section{
+	Name = "Desync",
+	Side = "Left"
+}
+
+RageTabDesync:Toggle{
+	Name = "Enabled",
+	Flag = nil, -- Leave this
+	Default = nil, -- Default setting (true or false) 
+	Callback  = function(bool)
+		AAEnabled = bool
+	end
+}
+
+RageTabDesync:Slider{
+	Text = "Velocity X Value",
+	Default = 1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 300, -- Max (Max it can go)
+	Float = 1, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+RageTabDesync:Slider{
+	Text = "Velocity Y Value",
+	Default = 1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 300, -- Max (Max it can go)
+	Float = 1, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+RageTabDesync:Slider{
+	Text = "Velocity Z Value",
+	Default = 1,
+	Min = 0, -- Minimum (Least it can go)
+	Max = 300, -- Max (Max it can go)
+	Float = 1, -- When you slide, how much it would go up by
+	Flag = nil, -- Leave this
+	Callback = function(value)
+		z = value
+	end
+}
+
+sectiona = CreditsTab:Section{
+	Name = "Credits",
+	Side = "Left"
+}
+
+
+
+--[[
+Documents for the fucking dumbass
+
+
+
+RageTabLeft:Toggle{
+    Name = "Name of the toggle",
+    Flag = nil, -- Leave this
+    Default = nil, -- Default setting (true or false) 
+    Callback  = function(bool)
+        AAEnabled = bool
+    end
+}
+
+section:Keybind{
+    Name = "Name of the keybind",
+    Flag = nil, -- Leave this
+    Default = Keybinds.CameraLock, -- Defualt setting
+    Blacklist = {Enum.UserInputType.MouseButton1}, -- Keybinds to ignore
+    Callback = function(key)
+        Keybinds.CameraLock = key
+    end
+}
+
+section:Dropdown{
+    Name = "Name of the dropdown",
+    Default = CameraLock.PredictionVector, -- Defualt setting
+    Content = { -- What options should be inside the dropdown
+        "Velocity";
+        "WalkDirection"; 
+    },
+    Flag = nil, -- LEave this
+    Callback = function(option)
+        CameraLock.PredictionVector = option
+    end
+}
+
+RageTabLeft:Slider{
+    Text = "Name of the slider",
+    Default = 100,
+    Min = 0, -- Minimum (Least it can go)
+    Max = 300, -- Max (Max it can go)
+    Float = 1, -- When you slide, how much it would go up by
+    Flag = nil, -- Leave this
+    Callback = function(value)
+        z = value
+    end
+}
+
+RageTabLeft:Button{
+    Name = "Name of the button",
+    Callback  = function()
+        print("Button clicked")
+    end
+}
+]]
+local configs = main:Tab("Settings")
+
+local themes = configs:Section{Name = "Theme", Side = "Left"}
+
+local themepickers = {}
+
+local themelist = themes:Dropdown{
+	Name = "Theme",
+	Default = library.currenttheme,
+	Content = library:GetThemes(),
+	Flag = "Theme Dropdown",
+	Callback = function(option)
+		if option then
+			library:SetTheme(option)
+
+			for option, picker in next, themepickers do
+				picker:Set(library.theme[option])
+			end
+		end
+	end
+}
+
+library:ConfigIgnore("Theme Dropdown")
+
+local namebox = themes:Box{
+	Name = "Custom Theme Name",
+	Placeholder = "Custom Theme",
+	Flag = "Custom Theme"
+}
+
+library:ConfigIgnore("Custom Theme")
+
+themes:Button{
+	Name = "Save Custom Theme",
+	Callback = function()
+		if library:SaveCustomTheme(library.flags["Custom Theme"]) then
+			themelist:Refresh(library:GetThemes())
+			themelist:Set(library.flags["Custom Theme"])
+			namebox:Set("")
+		end
+	end
+}
+
+local customtheme = configs:Section{Name = "Custom Theme", Side = "Right"}
+
+themepickers["Accent"] = customtheme:ColorPicker{
+	Name = "Accent",
+	Default = library.theme["Accent"],
+	Flag = "Accent",
+	Callback = function(color)
+		library:ChangeThemeOption("Accent", color)
+	end
+}
+
+library:ConfigIgnore("Accent")
+
+themepickers["Window Background"] = customtheme:ColorPicker{
+	Name = "Window Background",
+	Default = library.theme["Window Background"],
+	Flag = "Window Background",
+	Callback = function(color)
+		library:ChangeThemeOption("Window Background", color)
+	end
+}
+
+library:ConfigIgnore("Window Background")
+
+themepickers["Window Border"] = customtheme:ColorPicker{
+	Name = "Window Border",
+	Default = library.theme["Window Border"],
+	Flag = "Window Border",
+	Callback = function(color)
+		library:ChangeThemeOption("Window Border", color)
+	end
+}
+
+library:ConfigIgnore("Window Border")
+
+themepickers["Tab Background"] = customtheme:ColorPicker{
+	Name = "Tab Background",
+	Default = library.theme["Tab Background"],
+	Flag = "Tab Background",
+	Callback = function(color)
+		library:ChangeThemeOption("Tab Background", color)
+	end
+}
+
+library:ConfigIgnore("Tab Background")
+
+themepickers["Tab Border"] = customtheme:ColorPicker{
+	Name = "Tab Border",
+	Default = library.theme["Tab Border"],
+	Flag = "Tab Border",
+	Callback = function(color)
+		library:ChangeThemeOption("Tab Border", color)
+	end
+}
+
+library:ConfigIgnore("Tab Border")
+
+themepickers["Tab Toggle Background"] = customtheme:ColorPicker{
+	Name = "Tab Toggle Background",
+	Default = library.theme["Tab Toggle Background"],
+	Flag = "Tab Toggle Background",
+	Callback = function(color)
+		library:ChangeThemeOption("Tab Toggle Background", color)
+	end
+}
+
+library:ConfigIgnore("Tab Toggle Background")
+
+themepickers["Section Background"] = customtheme:ColorPicker{
+	Name = "Section Background",
+	Default = library.theme["Section Background"],
+	Flag = "Section Background",
+	Callback = function(color)
+		library:ChangeThemeOption("Section Background", color)
+	end
+}
+
+library:ConfigIgnore("Section Background")
+
+themepickers["Section Border"] = customtheme:ColorPicker{
+	Name = "Section Border",
+	Default = library.theme["Section Border"],
+	Flag = "Section Border",
+	Callback = function(color)
+		library:ChangeThemeOption("Section Border", color)
+	end
+}
+
+library:ConfigIgnore("Section Border")
+
+themepickers["Text"] = customtheme:ColorPicker{
+	Name = "Text",
+	Default = library.theme["Text"],
+	Flag = "Text",
+	Callback = function(color)
+		library:ChangeThemeOption("Text", color)
+	end
+}
+
+library:ConfigIgnore("Text")
+
+themepickers["Disabled Text"] = customtheme:ColorPicker{
+	Name = "Disabled Text",
+	Default = library.theme["Disabled Text"],
+	Flag = "Disabled Text",
+	Callback = function(color)
+		library:ChangeThemeOption("Disabled Text", color)
+	end
+}
+
+library:ConfigIgnore("Disabled Text")
+
+themepickers["Object Background"] = customtheme:ColorPicker{
+	Name = "Object Background",
+	Default = library.theme["Object Background"],
+	Flag = "Object Background",
+	Callback = function(color)
+		library:ChangeThemeOption("Object Background", color)
+	end
+}
+
+library:ConfigIgnore("Object Background")
+
+themepickers["Object Border"] = customtheme:ColorPicker{
+	Name = "Object Border",
+	Default = library.theme["Object Border"],
+	Flag = "Object Border",
+	Callback = function(color)
+		library:ChangeThemeOption("Object Border", color)
+	end
+}
+
+library:ConfigIgnore("Object Border")
+
+themepickers["Dropdown Option Background"] = customtheme:ColorPicker{
+	Name = "Dropdown Option Background",
+	Default = library.theme["Dropdown Option Background"],
+	Flag = "Dropdown Option Background",
+	Callback = function(color)
+		library:ChangeThemeOption("Dropdown Option Background", color)
+	end
+}
+
+local keybindsection = configs:Section{Name = "UI Toggle Keybind", Side = "Left"}
+
+keybindsection:Keybind{
+	Name = "UI Toggle",
+	Flag = "UI Toggle",
+	Default = Enum.KeyCode.RightShift,
+	Blacklist = {Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseButton2, Enum.UserInputType.MouseButton3},
+	Callback = function(_, fromsetting)
+		if not fromsetting then
+			library:Close()
+		end
+	end
+}
