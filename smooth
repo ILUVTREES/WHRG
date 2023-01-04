@@ -1,0 +1,104 @@
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+local plr = cloneref(game:GetService("Players"))
+local lplr = plr.LocalPlayer or plr:GetPropertyChangedSignal("LocalPlayer"):Wait()
+local lchr = lplr.Character or lplr.CharacterAdded:Wait()
+repeat
+	wait()
+until lchr:findFirstChild("ForceField") == nil
+local UIS = game:GetService("UserInputService")
+local runservice = cloneref(game:GetService("RunService"))
+local workspace = cloneref(game:GetService("Workspace"))
+getgenv().EnabledLockd = false
+UIS.InputBegan:Connect(function(input, chatting)
+	if chatting then return end
+	if input.UserInputType == Enum.UserInputType.Keyboard then
+		if input.KeyCode == Enum.KeyCode.V then
+			cam = game:GetService("Workspace").CurrentCamera
+			if not Lock then
+				Lock = true
+				getgenv().EnabledLockd = true
+				GetNearestTarget = function()
+					local players = {}
+					local PLAYER_HOLD  = {}
+					local DISTANCES = {}
+					for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+						if v ~= game:GetService("Players").LocalPlayer then
+							table.insert(players, v)
+						end
+					end
+					for i, v in pairs(players) do
+						if v.Character ~= nil then
+							local AIM = v.Character:FindFirstChild("Head")
+							if v.Character:findFirstChildOfClass("Humanoid").Health <= 0 then
+								return nil
+							end
+							local DISTANCE = (v.Character:FindFirstChild("Head").Position - game.Workspace.CurrentCamera.CFrame.p).magnitude
+							local RAY = Ray.new(game.Workspace.CurrentCamera.CFrame.p, (game:GetService("Players").LocalPlayer:GetMouse().Hit.p - game.Workspace.CurrentCamera.CFrame.p).unit * DISTANCE)
+							local HIT,POS = game.Workspace:FindPartOnRay(RAY, game.Workspace)
+							local DIFF = math.floor((POS - AIM.Position).magnitude)
+							PLAYER_HOLD[v.Name .. i] = {}
+							PLAYER_HOLD[v.Name .. i].dist= DISTANCE
+							PLAYER_HOLD[v.Name .. i].plr = v
+							PLAYER_HOLD[v.Name .. i].diff = DIFF
+							table.insert(DISTANCES, DIFF)
+						end
+					end
+
+					if unpack(DISTANCES) == nil then
+						return nil
+					end
+
+					local L_DISTANCE = math.floor(math.min(unpack(DISTANCES)))
+					if L_DISTANCE > 30 then
+						return nil
+					end
+
+
+					for i, v in pairs(PLAYER_HOLD) do
+						if v.diff == L_DISTANCE then
+							return v.plr
+						end
+					end
+					return nil
+				end
+
+				pcall(function()
+					CaughtPlayer = GetNearestTarget().Character or GetNearestTarget().CharacterAdded:Wait()
+				end)
+
+				spawn(function()
+					prediction =
+						game:GetService("RunService").RenderStepped:Connect(function()
+							local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+							local Value = tostring(ping)
+							local pingValue = Value:split(" ")
+							local PingNumber = pingValue[1]
+							local PingPred = PingNumber / 1000
+							local Distance = game:GetService("Players").LocalPlayer:DistanceFromCharacter(CaughtPlayer.HumanoidRootPart.Position) /  1000
+							local Size = CaughtPlayer.HumanoidRootPart.Size.X + CaughtPlayer.HumanoidRootPart.Size.Y + CaughtPlayer.HumanoidRootPart.Size.Z
+							Main = PingPred + Distance + Size / 10000000 + 0.0461
+						end)
+				end)
+				--  + CaughtPlayer.HumanoidRootPart.Velocity * Main
+				lockloop =
+					game:GetService("RunService").Heartbeat:Connect(function()
+						local Velocity = CaughtPlayer.HumanoidRootPart.Velocity
+						CaughtPlayer.HumanoidRootPart.Velocity = Vector3.new(Velocity.X, 0, Velocity.Z)
+						local Linear = CaughtPlayer.HumanoidRootPart.AssemblyLinearVelocity
+						CaughtPlayer.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(Linear.X, 0, Linear.Z)
+						cam.CFrame=cam.CFrame:Lerp(CFrame.new(cam.CFrame.Position,CaughtPlayer.HumanoidRootPart.Position+(CaughtPlayer.HumanoidRootPart.Velocity)* Main), 1, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
+						--print(game:GetService("Players").LocalPlayer:DistanceFromCharacter(CaughtPlayer.HumanoidRootPart.Position) / 125)
+					end)
+			else
+				Lock = false
+				getgenv().EnabledLockd = false
+				if lockloop then lockloop:Disconnect() end
+				if prediction then prediction:Disconnect() end
+			end
+		end
+	end
+end)
+
+lchr.Humanoid:ChangeState("Jumping")
